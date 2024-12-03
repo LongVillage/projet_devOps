@@ -1,0 +1,9 @@
+image:
+  repository: [your-aws-ecr-repo]   # Repository pour l'image Docker - VARIABLE : Remplace par ton propre repo
+  tag: latest                       # Tag de l'image (peut être 'latest' ou un numéro de version) - VARIABLE : Remplace selon la version voulue
+
+aws:
+  region: "eu-west-1"               # Région AWS - VARIABLE : Modifier en fonction de la région utilisée
+  accessKeyId: "YOUR_ACCESS_KEY_ID" # Clé AWS - Remplacer par la clé réelle
+  secretAccessKey: "YOUR_SECRET_ACCESS_KEY" # Clé secrète AWS - Remplacer par la clé réelle
+

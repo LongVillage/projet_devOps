@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: train-model-job                       # Nom du job Kubernetes
+  namespace: data-processing
+spec:
+  template:
+    spec:
+      containers:
+      - name: train-model
+        image: "{{ .Values.image.repository }}/train-model:{{ .Values.image.tag }}"  # IMAGE - Récupéré depuis values.yaml
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: secret_access_key
+        - name: AWS_DEFAULT_REGION
+          value: "{{ .Values.aws.region }}"  # Région AWS - Récupérée depuis values.yaml
+      restartPolicy: Never
+  backoffLimit: 4
+

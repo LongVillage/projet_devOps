@@ -1,0 +1,78 @@
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  AWS_DEFAULT_REGION: "eu-west-1"
+
+before_script:
+  # Installer Helm, Docker CLI, et autres dépendances nécessaires
+  - apk add --no-cache curl jq python3 py3-pip docker-cli
+  - pip install --no-cache-dir awscli
+  # Se connecter à ECR (Docker registry sur AWS)
+  - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
+
+# Build stage for extract-data
+build-extract-data:
+  stage: build
+  script:
+    # Construire l'image Docker pour extract-data
+    - docker build -t [your-aws-ecr-repo]/extract-data:latest ./services/extract-data
+
+# Push stage for extract-data
+push-extract-data:
+  stage: push
+  script:
+    # Pousser l'image vers ECR pour extract-data
+    - docker push [your-aws-ecr-repo]/extract-data:latest
+
+# Deploy stage for extract-data
+deploy-extract-data:
+  stage: deploy
+  script:
+    # Déployer les ressources Kubernetes avec Helm pour extract-data
+    - helm upgrade --install extract-data charts/extract-data --namespace data-processing
+
+# Build stage for train-model
+build-train-model:
+  stage: build
+  script:
+    # Construire l'image Docker pour train-model
+    - docker build -t [your-aws-ecr-repo]/train-model:latest ./services/train-model
+
+# Push stage for train-model
+push-train-model:
+  stage: push
+  script:
+    # Pousser l'image vers ECR pour train-model
+    - docker push [your-aws-ecr-repo]/train-model:latest
+
+# Deploy stage for train-model
+deploy-train-model:
+  stage: deploy
+  script:
+    # Déployer les ressources Kubernetes avec Helm pour train-model
+    - helm upgrade --install train-model charts/train-model --namespace data-processing
+
+# Build stage for predict-model
+build-predict-model:
+  stage: build
+  script:
+    # Construire l'image Docker pour predict-model
+    - docker build -t [your-aws-ecr-repo]/predict-model:latest ./services/predict-model
+
+# Push stage for predict-model
+push-predict-model:
+  stage: push
+  script:
+    # Pousser l'image vers ECR pour predict-model
+    - docker push [your-aws-ecr-repo]/predict-model:latest
+
+# Deploy stage for predict-model
+deploy-predict-model:
+  stage: deploy
+  script:
+    # Déployer les ressources Kubernetes avec Helm pour predict-model
+    - helm upgrade --install predict-model charts/predict-model --namespace data-processing
+

@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: extract-data-job                       # Nom du job - Peut être modifié dans `values.yaml` pour chaque environnement
+  namespace: data-processing                   # Namespace - Doit être défini selon l'organisation de tes namespaces Kubernetes
+spec:
+  template:
+    spec:
+      containers:
+      - name: extract-data
+        image: "{{ .Values.image.repository }}/extract-data:{{ .Values.image.tag }}"  # IMAGE - Récupéré depuis values.yaml pour modularité
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials             # Nom du secret Kubernetes (référence au secret défini) - Doit correspondre à secret.yaml
+              key: access_key_id                # Clé spécifique du secret
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: secret_access_key            # Clé spécifique du secret
+        - name: DATA_SOURCE_URL
+          value: "{{ .Values.services.extractData.dataSourceUrl }}"  # VARIABLE : URL de la source de données (values.yaml)
+        - name: OUTPUT_S3_BUCKET
+          value: "{{ .Values.services.extractData.outputS3Bucket }}"  # VARIABLE : Destination S3 (values.yaml)
+      restartPolicy: Never                      # Politique de redémarrage - Ne jamais redémarrer ce job
+  backoffLimit: 4                               # Nombre maximum de tentatives en cas d'échec - Peut être modifié selon le contexte
+
