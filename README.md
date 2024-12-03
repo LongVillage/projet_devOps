@@ -1,93 +1,153 @@
-# DevOpsproject
+# Projet MLOps - README
 
+## Introduction
 
+Ce projet est un Proof of Concept (PoC) visant à mettre en place une architecture complète d'un pipeline MLOps pour le déploiement de modèles de Machine Learning. L'objectif est de permettre l'automatisation des différentes étapes du cycle de vie des modèles : extraction des données, entraînement, prédiction, monitoring du drift des modèles et réentraînement automatique lorsque des seuils sont atteints. Le tout est déployé sur Kubernetes avec une intégration CI/CD, et inclut l'utilisation d'outils tels que Docker, Helm, et AWS SageMaker.
 
-## Getting started
+## Structure du Projet
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+Voici la structure actuelle du projet :
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/Courteville/devopsproject.git
-git branch -M main
-git push -uf origin main
+/mon-projet-mlops/
+├── charts/                         # Charts Helm pour gérer les services
+│   ├── extract-data/               # Chart Helm pour le service d'extraction des données
+│   │   ├── Chart.yaml              # Metadata du chart Helm
+│   │   ├── values.yaml             # Valeurs utilisées dans les templates Helm
+│   │   └── templates/              # Templates des ressources Kubernetes
+│   │       ├── job.yaml            # Template pour le Job d'extraction des données
+│   ├── train-model/                # Chart Helm pour le service d'entraînement
+│   │   ├── Chart.yaml              # Metadata du chart Helm
+│   │   ├── values.yaml             # Valeurs utilisées dans les templates Helm
+│   │   └── templates/              # Templates des ressources Kubernetes
+│   │       ├── job.yaml            # Template pour le Job d'entraînement
+│   └── predict-model/              # Chart Helm pour le service de prédiction
+│       ├── Chart.yaml              # Metadata du chart Helm
+│       ├── values.yaml             # Valeurs utilisées dans les templates Helm
+│       └── templates/              # Templates des ressources Kubernetes
+│           ├── deployment.yaml     # Template pour le Déploiement du service de prédiction
+│           ├── service.yaml        # Template pour exposer le déploiement
+├── services/                       # Dossier contenant chaque service
+│   ├── extract-data/               # Service d'extraction des données
+│   │   ├── Dockerfile              # Dockerfile pour construire l'image du service
+│   │   ├── requirements.txt        # Dépendances Python
+│   │   ├── main.py                 # Script principal (vide pour le moment)
+│   │   └── k8s/                    # Manifests Kubernetes spécifiques
+│   │       ├── job.yaml            # Job pour l'extraction (version non Helm)
+│   │       ├── secret.yaml         # Secret pour accéder à AWS (version non Helm)
+│   ├── train-model/                # Service d'entraînement des modèles
+│   │   ├── Dockerfile              # Dockerfile pour construire l'image du service
+│   │   ├── requirements.txt        # Dépendances Python
+│   │   ├── train.py                # Script d'entraînement (en attente de validation)
+│   │   └── k8s/                    # Manifests Kubernetes spécifiques
+│   │       ├── job.yaml            # Job Kubernetes pour l'entraînement
+│   ├── predict-model/              # Service de prédiction des modèles
+│   │   ├── Dockerfile              # Dockerfile pour le service de prédiction
+│   │   ├── requirements.txt        # Dépendances Python
+│   │   ├── predict.py              # Script pour gérer les prédictions
+│   │   └── k8s/                    # Manifests Kubernetes spécifiques
+│   │       ├── deployment.yaml     # Déploiement Kubernetes pour le service de prédiction
+│   │       ├── service.yaml        # Service Kubernetes pour exposer le déploiement
+├── .gitlab-ci.yml                  # CI/CD pour orchestrer les services
+└── README.md                       # Documentation
 ```
 
-## Integrate with your tools
+## Commandes Pertinentes
 
-- [ ] [Set up project integrations](https://gitlab.com/Courteville/devopsproject/-/settings/integrations)
+Voici un ensemble de commandes importantes pour interagir avec le projet.
 
-## Collaborate with your team
+### 1. **Docker**
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+Pour construire et pousser les images Docker sur votre repository AWS ECR :
 
-## Test and Deploy
+- **Construire l'image Docker** :
 
-Use the built-in continuous integration in GitLab.
+  ```bash
+  docker build -t [your-aws-ecr-repo]/[service-name]:latest ./services/[service-name]
+  ```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- **Se connecter à AWS ECR** :
 
-***
+  ```bash
+  aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin [your-aws-ecr-repo]
+  ```
 
-# Editing this README
+- **Pousser l'image Docker vers ECR** :
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+  ```bash
+  docker push [your-aws-ecr-repo]/[service-name]:latest
+  ```
 
-## Suggestions for a good README
+### 2. **Kubernetes (kubectl)**
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- **Appliquer un fichier Kubernetes** :
 
-## Name
-Choose a self-explaining name for your project.
+  ```bash
+  kubectl apply -f services/[service-name]/k8s/[manifest-file].yaml
+  ```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- **Vérifier l'état d'un job** :
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+  ```bash
+  kubectl get jobs -n data-processing
+  ```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- **Voir les logs d'un job** :
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+  ```bash
+  kubectl logs job/[job-name] -n data-processing
+  ```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- **Créer un namespace** :
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+  ```bash
+  kubectl create namespace data-processing
+  ```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### 3. **Helm**
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+- **Lint le Chart Helm** :
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+  ```bash
+  helm lint charts/[service-name]
+  ```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+- **Déployer le Chart Helm** :
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+  ```bash
+  helm upgrade --install [service-name] charts/[service-name] --namespace data-processing
+  ```
 
-## License
-For open source projects, say how it is licensed.
+- **Visualiser les fichiers YAML générés** :
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+  ```bash
+  helm template charts/[service-name]
+  ```
+
+### 4. **CI/CD (GitLab)**
+
+- La pipeline CI/CD est définie dans le fichier **`.gitlab-ci.yml`**, et comporte des stages de build, push, et deploy pour chaque service. Chaque modification pushée sur le repository déclenchera automatiquement ces processus.
+
+## Ce Qui Est Mis en Place
+
+Voici un résumé de ce qui est déjà en place :
+
+- **Service d'Extraction des Données** : Récupération des données d'une source externe et stockage dans un bucket S3.
+- **Service d'Entraînement des Modèles** : Déclenchement de l'entraînement de modèles ML (en attente de validation des détails du script d'entraînement).
+- **Service de Prédiction** : Fourniture d'une API REST permettant de faire des prédictions à partir des modèles déployés.
+- **CI/CD** : Automatisation des processus de construction, push, et déploiement des images Docker via GitLab CI/CD.
+- **Helm** : Gérer et déployer les services avec une approche modulaire adaptable aux différents environnements.
+
+## Ce Qu'il Reste à Faire
+
+1. **Authentification des Utilisateurs** : Créer un service backend permettant l'inscription, la connexion, et la gestion des utilisateurs (login/password).
+2. **Ajout d'Ingress** : Utiliser un Ingress Kubernetes pour rendre les services accessibles publiquement.
+3. **Monitoring et MLOps** : Intégrer des outils de monitoring comme **Prometheus** et **Grafana** pour surveiller les modèles en production et détecter le drift des données.
+4. **Gestion des Modèles Multiples** : Modifier le service de prédiction pour permettre aux utilisateurs de choisir parmi plusieurs modèles (comme régression linéaire, logistique, et random forest).
+5. **Base de Données** : Ajouter une base de données poursauvegarder les informations d'utilisateur (identifiants et informations de sessions) et potentiellement les métadonnées des prédictions réalisées.
+
+
+   # Conclusion
+   Cette documentation est un guide complet de ce qui a été mis en place jusqu'à présent, ainsi que des prochaines étapes à réaliser pour atteindre les objectifs du projet. N'hésitez pas à consulter chaque section, tester les différentes commandes, et me faire part de vos questions ou besoins de clarification.
+
+
