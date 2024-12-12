@@ -1,6 +1,9 @@
 # Utiliser une image de base légère qui supporte Python
 FROM python:3.9-slim
 
+ENV PYTHONBUFFED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+
 # Définir le répertoire de travail
 WORKDIR /app
 
