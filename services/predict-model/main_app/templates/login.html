@@ -20,16 +20,17 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <!-- Ajouter des classes directement dans le template -->
                     <label for="{{ form.username.id_for_label }}" class="form-label">Nom d'utilisateur</label>
                     <input type="text" name="username" class="form-control bg-dark text-white border-secondary" id="{{ form.username.id_for_label }}" value="{{ form.username.value }}">
                 </div>
                 <div class="mb-3">
-                    <!-- Ajouter des classes directement dans le template -->
                     <label for="{{ form.password.id_for_label }}" class="form-label">Mot de passe</label>
                     <input type="password" name="password" class="form-control bg-dark text-white border-secondary" id="{{ form.password.id_for_label }}" value="{{ form.password.value }}">
                 </div>
-                <button type="submit" class="btn btn-lg btn-warning w-100">Se connecter</button>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-lg btn-warning">Connexion</button>
+                    <a class="btn btn-lg btn-outline-warning" href="{% url 'register' %}">Inscription</a>
+                </div>
             </form>
         </div>
     </div>

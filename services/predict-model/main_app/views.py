@@ -9,11 +9,8 @@ def home(request):
     return render(request, "index.html")
 
 
-# Simulated in-memory user data
-mock_user = {
-    'username': 'demo_user',
-    'password': 'demo_password'
-}
+def profile(request):
+    return render(request, "profile.html")
 
 
 def login_user(request):
@@ -22,7 +19,7 @@ def login_user(request):
         password = request.POST['password']
 
         # Simulate authentication with the mock user
-        if username == mock_user['username'] and password == mock_user['password']:
+        if username and password:
             request.session['user'] = username  # Store user in session
             return redirect('home')
         else:
@@ -42,12 +39,6 @@ def register_user(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        # For demonstration, replace the mock user data
-        global mock_user
-        mock_user = {
-            'username': username,
-            'password': password
-        }
         messages.success(request, 'User registered successfully')
         return redirect('home')
 
