@@ -17,5 +17,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8000
 
 # Lancer le serveur avec Uvicorn
-CMD ["uvicorn", "predict:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 

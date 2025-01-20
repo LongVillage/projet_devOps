@@ -5,13 +5,13 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copie le fichier requirements.txt dans le conteneur depuis le dossier streamlit
-COPY streamlit/requirements.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 
 # Installe les dépendances nécessaires
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copie tout le contenu du dossier streamlit dans le répertoire de travail
-COPY streamlit/ .
+COPY . .
 
 # Expose le port par défaut utilisé par Streamlit
 EXPOSE 8501

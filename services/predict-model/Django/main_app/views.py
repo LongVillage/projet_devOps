@@ -6,7 +6,8 @@ from django.contrib import messages
 
 
 def home(request):
-    return render(request, "index.html")
+    streamlit_url = os.getenv('STREAMLIT_URL', 'http://placeholder/streamlit')
+    return render(request, "index.html", {"streamlit_url": streamlit_url})
 
 
 def profile(request):

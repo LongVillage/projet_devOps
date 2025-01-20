@@ -36,7 +36,7 @@
                 <a class="btn btn-lg btn-outline-warning w-auto" href="{% url 'profile' %}">Profile</a>
             </div>
             <div class="collapse mt-3" id="message">
-                <iframe src="http://localhost:8501" width="1300px" height="650px" style="border:none;">
+		    <iframe src="{{ streamlit_url}}" width="1300px" height="650px" style="border:none;">
                     Your browser does not support iframes.
                 </iframe>
             </div>
