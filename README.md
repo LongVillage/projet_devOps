@@ -10,37 +10,8 @@ Voici la structure actuelle du projet :
 
 ```
 /mon-projet-mlops/
-├── charts/                         # Charts Helm pour gérer les services
-│   ├── extract-data/               # Chart Helm pour le service d'extraction des données
-│   │   ├── Chart.yaml              # Metadata du chart Helm
-│   │   ├── values.yaml             # Valeurs utilisées dans les templates Helm
-│   │   └── templates/              # Templates des ressources Kubernetes
-│   │       ├── job.yaml            # Template pour le Job d'extraction des données
-│   ├── train-model/                # Chart Helm pour le service d'entraînement
-│   │   ├── Chart.yaml              # Metadata du chart Helm
-│   │   ├── values.yaml             # Valeurs utilisées dans les templates Helm
-│   │   └── templates/              # Templates des ressources Kubernetes
-│   │       ├── job.yaml            # Template pour le Job d'entraînement
-│   └── predict-model/              # Chart Helm pour le service de prédiction
-│       ├── Chart.yaml              # Metadata du chart Helm
-│       ├── values.yaml             # Valeurs utilisées dans les templates Helm
-│       └── templates/              # Templates des ressources Kubernetes
-│           ├── deployment.yaml     # Template pour le Déploiement du service de prédiction
-│           ├── service.yaml        # Template pour exposer le déploiement
+
 ├── services/                       # Dossier contenant chaque service
-│   ├── extract-data/               # Service d'extraction des données
-│   │   ├── Dockerfile              # Dockerfile pour construire l'image du service
-│   │   ├── requirements.txt        # Dépendances Python
-│   │   ├── main.py                 # Script principal (vide pour le moment)
-│   │   └── k8s/                    # Manifests Kubernetes spécifiques
-│   │       ├── job.yaml            # Job pour l'extraction (version non Helm)
-│   │       ├── secret.yaml         # Secret pour accéder à AWS (version non Helm)
-│   ├── train-model/                # Service d'entraînement des modèles
-│   │   ├── Dockerfile              # Dockerfile pour construire l'image du service
-│   │   ├── requirements.txt        # Dépendances Python
-│   │   ├── train.py                # Script d'entraînement (en attente de validation)
-│   │   └── k8s/                    # Manifests Kubernetes spécifiques
-│   │       ├── job.yaml            # Job Kubernetes pour l'entraînement
 │   ├── predict-model/              # Service de prédiction des modèles
 │   │   ├── Dockerfile              # Dockerfile pour le service de prédiction
 │   │   ├── requirements.txt        # Dépendances Python
