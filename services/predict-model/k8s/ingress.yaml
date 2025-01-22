@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: crypto-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    # (autres annotations éventuelles)
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: django-service
+                port:
+                  number: 8000
+          - path: "/streamlit"
+            pathType: Prefix
+            backend:
+              service:
+                name: streamlit-service
+                port:
+                  number: 8501
+

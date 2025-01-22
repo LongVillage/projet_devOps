@@ -1,4 +1,0 @@
-image:
-  repository: [your-aws-ecr-repo]   # Repository pour l'image Docker - VARIABLE : Remplace par ton propre repo
-  tag: latest                       # Tag de l'image (peut être 'latest' ou un numéro de version) - VARIABLE : Remplace selon la version voulue
-

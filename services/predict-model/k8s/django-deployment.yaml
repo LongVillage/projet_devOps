@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+      - name: django-container
+        # Ton image Docker dans ECR
+        image: 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/djangocrypto:latest
+
+        ports:
+          - containerPort: 8000
+
+        env:
+          # >>> ConfigMap
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: django-config
+                key: DB_HOST
+
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: django-config
+                key: DB_NAME
+
+          - name: DB_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: django-config
+                key: DB_PORT
+
+          - name: STREAMLIT_URL
+            valueFrom:
+              configMapKeyRef:
+                name: django-config
+                key: STREAMLIT_URL
+
+          # >>> Secret
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: DB_PASSWORD
+
+        # Si nécessaire : commande pour lancer Django (si non géré par Dockerfile):
+        # command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+

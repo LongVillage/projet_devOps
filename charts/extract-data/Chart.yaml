@@ -1,6 +1,0 @@
-apiVersion: v2                  # Version de l'API Helm - Doit être "v2" pour Helm 3
-name: extract-data              # Nom du chart - Doit être unique pour identifier le chart Helm
-version: 0.1.0                  # Version du chart - Indique la version actuelle du chart (à incrémenter avec les modifications majeures)
-description: Helm chart for extract-data service  # Description - Courte description de ce que fait ce chart
-appVersion: "1.0.0"            # Version de l'application - Correspond à la version de l'application déployée par ce chart
-

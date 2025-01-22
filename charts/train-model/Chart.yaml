@@ -1,6 +1,0 @@
-apiVersion: v2
-name: train-model
-version: 0.1.0
-description: Helm chart for train-model service
-appVersion: "1.0.0"
-
