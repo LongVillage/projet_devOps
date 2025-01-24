@@ -19,8 +19,9 @@ def login_user(request):
         username = request.POST['username']
         password = request.POST['password']
 
-        # Simulate authentication with the mock user
-        if username and password:
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
             request.session['user'] = username  # Store user in session
             return redirect('home')
         else:
@@ -36,12 +37,17 @@ def logout_user(request):
 
 
 def register_user(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+    if request.method != 'POST':
+        form = UserCreationForm()
+    else:
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User registered successfully')
+            return redirect('home')
+        else:
+            error_messages = " ".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])
+            messages.error(request, f"Une erreur est survenue : {error_messages}")
 
-        messages.success(request, 'User registered successfully')
-        return redirect('home')
-
-    form = UserCreationForm()
-    return render(request, 'register.html', {'form': form})
+    context = {'form': form}
+    return render(request, 'register.html', context)
