@@ -12,12 +12,12 @@
             <h2 class="text-center mb-4">Créer un compte</h2>
 
             {% for message in messages %}
-                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                <div class="alert alert-info" role="alert">
                     {{ message }}
                 </div>
             {% endfor %}
 
-            <form method="POST" action="">
+            <form method="post">
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="{{ form.username.id_for_label }}" class="form-label">Nom d'utilisateur</label>
