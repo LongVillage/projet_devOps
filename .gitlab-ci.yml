@@ -12,7 +12,7 @@ before_script:
   # - pip install --no-cache-dir awscli
   # # Se connecter à ECR (Docker registry sur AWS)
   # - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
-   - apt-get update -y
+  - apt-get update -y
   - apt-get install -y python3 docker curl jq kubectl
   # Installer awscli avec pip3
   - pip3 install --no-cache-dir awscli
