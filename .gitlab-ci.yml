@@ -7,12 +7,17 @@ variables:
   AWS_DEFAULT_REGION: "eu-west-1"
 
 before_script:
-  # Installer Helm, Docker CLI, et autres dépendances nécessaires
-  - apk add --no-cache docker-cli curl jq python3 py3-pip kubectl
-  - pip install --no-cache-dir awscli
+  # # Installer Helm, Docker CLI, et autres dépendances nécessaires
+  # - apk add --no-cache docker-cli curl jq python3 py3-pip kubectl
+  # - pip install --no-cache-dir awscli
+  # # Se connecter à ECR (Docker registry sur AWS)
+  # - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
+  - brew update
+  - brew install python docker curl jq kubectl
+  # Installer awscli avec pip3 (si Python 3 est installé)
+  - pip3 install --no-cache-dir awscli
   # Se connecter à ECR (Docker registry sur AWS)
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
-
 # Build stage for extract-data
 build-extract-data:
   stage: build
