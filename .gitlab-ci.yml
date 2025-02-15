@@ -76,3 +76,52 @@ deploy-predict-model:
     # Déployer les ressources Kubernetes avec Helm pour predict-model
     - helm upgrade --install predict-model charts/predict-model --namespace data-processing
 
+
+# Build stage pour django-crypto
+build-django:
+  stage: build
+  script:
+    # Construire l'image Docker pour django
+    - docker build -t [your-aws-ecr-repo]/django-crypto:latest ./services/django-crypto
+
+# Push stage pour django-crypto
+push-django:
+  stage: push
+  script:
+    # Pousser l'image vers ECR pour django
+    - docker push [your-aws-ecr-repo]/django-crypto:latest
+
+# Deploy stage pour Django
+deploy-django:
+  stage: deploy
+  script:
+    # Appliquer les manifests Kubernetes pour Django
+    - kubectl apply -f k8s/django-secret.yaml
+    - kubectl apply -f k8s/django-config.yaml
+    - kubectl apply -f k8s/django-service.yaml
+    - kubectl apply -f k8s/django-deployment.yaml
+    # Appliquer l'Ingress si nécessaire (commune à Django et Streamlit)
+    - kubectl apply -f k8s/ingress.yaml
+
+# Build stage pour streamlit-crypto
+build-streamlit:
+  stage: build
+  script:
+    # Construire l'image Docker pour streamlit
+    - docker build -t [your-aws-ecr-repo]/streamlit-crypto:latest ./services/streamlit-crypto
+
+# Push stage pour streamlit-crypto
+push-streamlit:
+  stage: push
+  script:
+    # Pousser l'image vers ECR pour streamlit
+    - docker push [your-aws-ecr-repo]/streamlit-crypto:latest
+
+# Deploy stage pour Streamlit
+deploy-streamlit:
+  stage: deploy
+  script:
+    # Appliquer les manifests Kubernetes pour Streamlit
+    - kubectl apply -f k8s/streamlit-service.yaml
+    - kubectl apply -f k8s/streamlit-deployment.yaml
+    # L'Ingress est appliqué dans le job deploy-django
