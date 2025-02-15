@@ -12,13 +12,13 @@ before_script:
   # - pip install --no-cache-dir awscli
   # # Se connecter à ECR (Docker registry sur AWS)
   # - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
-  - brew update
-  - brew install python docker curl jq kubectl
-  # Installer awscli avec pip3 (si Python 3 est installé)
+   - apt-get update -y
+  - apt-get install -y python3 docker curl jq kubectl
+  # Installer awscli avec pip3
   - pip3 install --no-cache-dir awscli
   # Se connecter à ECR (Docker registry sur AWS)
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
-# Build stage for extract-data
+  # Build stage for extract-data
 build-extract-data:
   stage: build
   script:
