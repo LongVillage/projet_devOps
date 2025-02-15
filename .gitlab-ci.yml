@@ -8,7 +8,7 @@ variables:
 
 before_script:
   # Installer Helm, Docker CLI, et autres dépendances nécessaires
-  - apk add --no-cache curl jq python3 py3-pip docker-cli
+  - apk add --no-cache docker-cli curl jq python3 py3-pip kubectl
   - pip install --no-cache-dir awscli
   # Se connecter à ECR (Docker registry sur AWS)
   - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
