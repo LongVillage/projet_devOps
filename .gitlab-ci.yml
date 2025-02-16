@@ -1,27 +1,35 @@
 image: debian:bookworm
 
+services:
+  - docker:dind
+
+variables:
+  # Permet de communiquer avec docker:dind
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  AWS_DEFAULT_REGION: "eu-west-1"
+  AWS_ECR_REPO: "131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage"
+
 stages:
   - build
   - push
   - deploy
 
-variables:
-  AWS_DEFAULT_REGION: "eu-west-1"
-
 before_script:
-  # # Installer Helm, Docker CLI, et autres dépendances nécessaires
-  # - apk add --no-cache docker-cli curl jq python3 py3-pip kubectl
-  # - pip install --no-cache-dir awscli
-  # # Se connecter à ECR (Docker registry sur AWS)
-  # - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
   - echo "Installation des dépendances..."
-  # Mise à jour et installation de Docker et curl
-  - apt-get update -y && apt-get install -y docker.io curl
+  # Mise à jour et installation de curl
+  - apk update && apk add --no-cache curl
   # Installation de kubectl
   - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
   - chmod +x kubectl && mv kubectl /usr/local/bin/
   # Installation de Helm
   - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+  # # Installer Helm, Docker CLI, et autres dépendances nécessaires
+  # - apk add --no-cache docker-cli curl jq python3 py3-pip kubectl
+  # - pip install --no-cache-dir awscli
+  # # Se connecter à ECR (Docker registry sur AWS)
+  # - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
 
 build-extract-data:
   stage: build
@@ -84,53 +92,48 @@ deploy-predict-model:
   script:
     # Déployer les ressources Kubernetes avec Helm pour predict-model
     - helm upgrade --install predict-model charts/predict-model --namespace data-processing
-
-
-# Build stage pour django-crypto
 build-django:
   stage: build
   script:
-    # Construire l'image Docker pour django
-    - docker build -t 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/djangocrypto/django-crypto:latest ./services/predict-model/Django
+    # Construire l'image Docker pour Django depuis le dossier "Django"
+    - docker build -t $AWS_ECR_REPO/djangocrypto/django-crypto:latest ./Django
+  # Assurez-vous que le runner est en mode privilégié
+  tags:
+    - docker
 
-# Push stage pour django-crypto
 push-django:
   stage: push
   script:
-    # Pousser l'image vers ECR pour django
-    - docker push 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/djangocrypto/django-crypto:latest
+    # Pousser l'image vers ECR pour Django
+    - docker push $AWS_ECR_REPO/djangocrypto/django-crypto:latest
 
-# Deploy stage pour Django
 deploy-django:
   stage: deploy
   script:
-    # Appliquer les manifests Kubernetes pour Django
-    - kubectl apply -f k8s/django-secret.yaml
-    - kubectl apply -f k8s/django-config.yaml
+    # Appliquer les manifests Kubernetes pour Django depuis le dossier "k8s"
+    - kubectl apply -f k8s/secret.yaml
+    - kubectl apply -f k8s/configmap.yaml
     - kubectl apply -f k8s/django-service.yaml
     - kubectl apply -f k8s/django-deployment.yaml
-    # Appliquer l'Ingress si nécessaire (commune à Django et Streamlit)
     - kubectl apply -f k8s/ingress.yaml
 
-# Build stage pour streamlit-crypto
 build-streamlit:
   stage: build
   script:
-    # Construire l'image Docker pour streamlit
-    - docker build -t 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/streamlitcrypto/streamlit-crypto:latest ./services/predict-model/streamlit
+    # Construire l'image Docker pour Streamlit depuis le dossier "streamlit"
+    - docker build -t $AWS_ECR_REPO/streamlitcrypto/streamlit-crypto:latest ./streamlit
+  tags:
+    - docker
 
-# Push stage pour streamlit-crypto
 push-streamlit:
   stage: push
   script:
-    # Pousser l'image vers ECR pour streamlit
-    - docker push 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/streamlitcrypto/streamlit-crypto:latest
+    # Pousser l'image vers ECR pour Streamlit
+    - docker push $AWS_ECR_REPO/streamlitcrypto/streamlit-crypto:latest
 
-# Deploy stage pour Streamlit
 deploy-streamlit:
   stage: deploy
   script:
-    # Appliquer les manifests Kubernetes pour Streamlit
+    # Appliquer les manifests Kubernetes pour Streamlit depuis le dossier "k8s"
     - kubectl apply -f k8s/streamlit-service.yaml
     - kubectl apply -f k8s/streamlit-deployment.yaml
-    # L'Ingress est appliqué dans le job deploy-django
