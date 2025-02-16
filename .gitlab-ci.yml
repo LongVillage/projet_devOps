@@ -14,18 +14,15 @@ before_script:
   # - pip install --no-cache-dir awscli
   # # Se connecter à ECR (Docker registry sur AWS)
   # - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
-  - apt-get update -y
-  - apt-get install -y apt-transport-https ca-certificates curl jq python3 docker
-  # Installer kubectl depuis le dépôt officiel Kubernetes
-  - curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-  - echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
-  - apt-get update -y
-  - apt-get install -y kubectl
-  # Installer awscli via pip3
-  - pip3 install --no-cache-dir awscli
-  # Se connecter à ECR (Docker registry sur AWS)
-  - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin [your-aws-ecr-repo]
-  # Build stage for extract-data
+  - echo "Installation des dépendances..."
+  # Mise à jour et installation de Docker et curl
+  - apt-get update -y && apt-get install -y docker.io curl
+  # Installation de kubectl
+  - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+  - chmod +x kubectl && mv kubectl /usr/local/bin/
+  # Installation de Helm
+  - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
 build-extract-data:
   stage: build
   script:
