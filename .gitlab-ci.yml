@@ -91,7 +91,7 @@ build-django:
   stage: build
   script:
     # Construire l'image Docker pour django
-    - docker build -t 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/djangocrypto/django-crypto:latest ./services/django-crypto
+    - docker build -t 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/djangocrypto/django-crypto:latest ./services/Django
 
 # Push stage pour django-crypto
 push-django:
@@ -117,7 +117,7 @@ build-streamlit:
   stage: build
   script:
     # Construire l'image Docker pour streamlit
-    - docker build -t 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/streamlitcrypto/streamlit-crypto:latest ./services/streamlit-crypto
+    - docker build -t 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/streamlitcrypto/streamlit-crypto:latest ./services/streamlit
 
 # Push stage pour streamlit-crypto
 push-streamlit:
