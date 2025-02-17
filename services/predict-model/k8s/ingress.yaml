@@ -3,9 +3,11 @@ kind: Ingress
 metadata:
   name: crypto-ingress
   annotations:
+    # Indique qu'on veut un ALB internet-facing
     alb.ingress.kubernetes.io/scheme: internet-facing
+    # On veut que le load balancer route directement (mode ip)
     alb.ingress.kubernetes.io/target-type: ip
-    # (autres annotations éventuelles)
+
 spec:
   ingressClassName: alb
   rules:

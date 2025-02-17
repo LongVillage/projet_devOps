@@ -6,7 +6,7 @@ spec:
   selector:
     app: django
   ports:
-    - port: 8000
-      targetPort: 8000
+    - port: 8000       # Port exposé par le service dans le cluster
+      targetPort: 8000 # Le containerPort
   type: ClusterIP
 

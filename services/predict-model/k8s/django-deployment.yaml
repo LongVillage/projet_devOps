@@ -14,39 +14,39 @@ spec:
     spec:
       containers:
       - name: django-container
-        # Ton image Docker dans ECR
-        image: 131674823919.dkr.ecr.eu-west-3.amazonaws.com/dockerimage/djangocrypto:latest
+        # Ton image Docker ECR
+        # => tu as créé un repo "django-crypto"
+        image: 131674823919.dkr.ecr.eu-west-3.amazonaws.com/django-crypto:latest
 
         ports:
           - containerPort: 8000
 
         env:
-          # >>> ConfigMap
+          # >>> DB config via ConfigMap
           - name: DB_HOST
             valueFrom:
               configMapKeyRef:
                 name: django-config
                 key: DB_HOST
-
           - name: DB_NAME
             valueFrom:
               configMapKeyRef:
                 name: django-config
                 key: DB_NAME
-
           - name: DB_PORT
             valueFrom:
               configMapKeyRef:
                 name: django-config
                 key: DB_PORT
 
+          # >>> Streamlit URL (mis dans la configmap)
           - name: STREAMLIT_URL
             valueFrom:
               configMapKeyRef:
                 name: django-config
                 key: STREAMLIT_URL
 
-          # >>> Secret
+          # >>> DB secrets (user/pass)
           - name: DB_USER
             valueFrom:
               secretKeyRef:
@@ -57,7 +57,4 @@ spec:
               secretKeyRef:
                 name: django-secret
                 key: DB_PASSWORD
-
-        # Si nécessaire : commande pour lancer Django (si non géré par Dockerfile):
-        # command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 

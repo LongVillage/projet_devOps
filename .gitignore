@@ -1,0 +1,7 @@
+# Ignorer le dossier /aws/ dans predict-model
+services/predict-model/aws/
+
+# (Optionnel) ignorer d'autres trucs
+# .idea/
+# *.pyc
+
