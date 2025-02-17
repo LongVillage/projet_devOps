@@ -73,7 +73,9 @@ deploy:
     - echo "ALB DNS is $ALB_DNS"
 
     - echo "=== Update ConfigMap with new STREAMLIT_URL ==="
-    - sed -i "s|STREAMLIT_URL:.*|STREAMLIT_URL: \"http://${ALB_DNS}/streamlit\"|g" services/predict-model/k8s/configmap.yaml
+    # On met la commande SED entre simples quotes, et on insère la variable $ALB_DNS en la concaténant
+    - sed -i 's|STREAMLIT_URL:.*|STREAMLIT_URL: "http://'"$ALB_DNS"'/streamlit"|g' services/predict-model/k8s/configmap.yaml
+
     - kubectl apply -f services/predict-model/k8s/configmap.yaml
 
     - echo "=== Restart Django deployment to reload env ==="
