@@ -59,28 +59,29 @@ deploy:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - echo "=== Configure kubectl to access EKS (myekscrypto) ==="
-    - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
+    - |
+      # Tout est ici dans un unique bloc Shell
 
-    - echo "=== Apply all K8s manifests (ingress, deployment, service) ==="
-    - kubectl apply -f services/predict-model/k8s/
+      echo "=== Configure kubectl to access EKS (myekscrypto) ==="
+      aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
 
-    - echo "Wait 30s for ALB creation"
-    - sleep 30
+      echo "=== Apply all K8s manifests (ingress, deployment, service) ==="
+      kubectl apply -f services/predict-model/k8s/
 
-    - echo "=== Retrieve ALB DNS from Ingress ==="
-    - export ALB_DNS=$(kubectl get ingress crypto-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-    - echo "ALB DNS is $ALB_DNS"
+      echo "Wait 30s for ALB creation"
+      sleep 30
 
-    - echo "=== Update ConfigMap with new STREAMLIT_URL ==="
-    # On met la commande SED entre simples quotes, et on insère la variable $ALB_DNS en la concaténant
-    - sed -i "s|STREAMLIT_URL:.*|STREAMLIT_URL: \\\"http://${ALB_DNS}/streamlit\\\"|g" services/predict-model/k8s/configmap.yaml
+      echo "=== Retrieve ALB DNS from Ingress ==="
+      ALB_DNS=$(kubectl get ingress crypto-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+      echo "ALB DNS is $ALB_DNS"
 
-    - kubectl apply -f services/predict-model/k8s/configmap.yaml
+      echo "=== Update ConfigMap with new STREAMLIT_URL ==="
+      sed -i 's|STREAMLIT_URL:.*|STREAMLIT_URL: "http://'"$ALB_DNS"'/streamlit"|g' services/predict-model/k8s/configmap.yaml
+      kubectl apply -f services/predict-model/k8s/configmap.yaml
 
-    - echo "=== Restart Django deployment to reload env ==="
-    - kubectl rollout restart deployment django-deployment
-    - kubectl get pods
+      echo "=== Restart Django deployment to reload env ==="
+      kubectl rollout restart deployment django-deployment
+      kubectl get pods
   dependencies:
     - infra
   only:
