@@ -64,12 +64,18 @@ deploy:
 
     - echo "=== Apply all K8s manifests (ingress, deployment, service) ==="
     - kubectl apply -f services/predict-model/k8s/
-    - echo "Attente 30s"
+
+    - echo "Wait 30s for ALB creation"
     - sleep 30
+
+    - echo "=== Retrieve ALB DNS from Ingress ==="
     - export ALB_DNS=$(kubectl get ingress crypto-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
     - echo "ALB DNS is $ALB_DNS"
-    - sed -i 's|STREAMLIT_URL:.*|STREAMLIT_URL: "http://'"$ALB_DNS"'/streamlit"|g' services/predict-model/k8s/configmap.yaml
+
+    - echo "=== Update ConfigMap with new STREAMLIT_URL ==="
+    - sed -i "s|STREAMLIT_URL:.*|STREAMLIT_URL: \"http://${ALB_DNS}/streamlit\"|g" services/predict-model/k8s/configmap.yaml
     - kubectl apply -f services/predict-model/k8s/configmap.yaml
+
     - echo "=== Restart Django deployment to reload env ==="
     - kubectl rollout restart deployment django-deployment
     - kubectl get pods
