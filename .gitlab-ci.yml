@@ -1,14 +1,16 @@
 #############################################
 # .gitlab-ci.yml
 #############################################
+
 stages:
   - build
   - infra
   - deploy
 
-# Variables : stocke la plupart dans l'UI GitLab > Settings > CI/CD > Variables
-# ex: $AWS_ACCESS_KEY_ID, $AWS_SECRET_ACCESS_KEY, $AWS_DEFAULT_REGION, ...
-# ex: $AWS_ECR_REGISTRY, $AWS_ECR_TOKEN (ou on fait un aws ecr get-login-password)
+# On suppose que tu as défini ces variables dans GitLab CI/CD > Settings > Variables :
+#  AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION
+#  AWS_ECR_REGISTRY (ex: 131674823919.dkr.ecr.eu-west-3.amazonaws.com)
+#  etc.
 
 build-docker:
   stage: build
@@ -18,17 +20,17 @@ build-docker:
   variables:
     DOCKER_HOST: "tcp://docker:2375/"
   script:
-    # 1) Se connecter à ECR (ou DockerHub)
+    - echo "=== Build & push Django container ==="
     - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ECR_REGISTRY
 
-    # 2) Build + push Django
+    # Build Django
     - cd services/predict-model/Django
     - docker build -t django-crypto:latest .
     - docker tag django-crypto:latest $AWS_ECR_REGISTRY/dockerimage/djangocrypto:latest
     - docker push $AWS_ECR_REGISTRY/dockerimage/djangocrypto:latest
     - cd ../..
 
-    # 3) Build + push Streamlit
+    - echo "=== Build & push Streamlit container ==="
     - cd services/predict-model/streamlit
     - docker build -t streamlit-crypto:latest .
     - docker tag streamlit-crypto:latest $AWS_ECR_REGISTRY/dockerimage/streamlitcrypto:latest
@@ -41,6 +43,7 @@ infra:
   stage: infra
   image: hashicorp/terraform:1.3.9
   script:
+    - echo "=== Terraform init/plan/apply ==="
     - cd services/predict-model/terraform
     - terraform init
     - terraform plan -out=tfplan
@@ -56,27 +59,24 @@ deploy:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    # 1) Configurer kubectl pour accéder au cluster. Ex:
-    #    aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
+    - echo "=== Configure kubectl to access EKS (myekscrypto) ==="
     - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
 
-    # 2) On applique tous les manifests (Ingress, Deployments, Services, etc.)
+    - echo "=== Apply all K8s manifests (ingress, deployment, service) ==="
     - kubectl apply -f services/predict-model/k8s/
-    # L'Ingress est créé => un ALB va se créer
 
-    # 3) Attendre un peu que l'ALB apparaisse
-    - echo "Waiting 30s for ALB..."
+    - echo "=== Wait 30s for ALB to be created by the Ingress Controller ==="
     - sleep 30
 
-    # 4) Récupérer le DNS de l'ALB
+    - echo "=== Retrieve ALB DNS from Ingress ==="
     - export ALB_DNS=$(kubectl get ingress crypto-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
     - echo "ALB DNS is $ALB_DNS"
 
-    # 5) Mettre à jour la ConfigMap => STREAMLIT_URL
+    - echo "=== Update ConfigMap with new STREAMLIT_URL ==="
     - sed -i "s|STREAMLIT_URL:.*|STREAMLIT_URL: \"http://$ALB_DNS/streamlit\"|g" services/predict-model/k8s/configmap.yaml
     - kubectl apply -f services/predict-model/k8s/configmap.yaml
 
-    # 6) Redémarrer Django pour qu'il prenne la nouvelle env
+    - echo "=== Restart Django deployment to reload env ==="
     - kubectl rollout restart deployment django-deployment
     - kubectl get pods
   dependencies:
