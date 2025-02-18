@@ -59,7 +59,10 @@ infra:
       echo "terraform plan -out=tfplan"
       terraform plan -out=tfplan
       echo "terraform apply -auto-approve tfplan"
-      terraform apply -auto-approve tfplan
+      terraform apply -auto-approve tfplan || {
+      echo "apply failed --> terraform destroy"
+      terraform destroy -auto-approve
+      }
   artifacts:
     paths:
       - services/predict-model/terraform/terraform.tfstate
