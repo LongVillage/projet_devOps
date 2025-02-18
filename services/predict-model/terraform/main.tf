@@ -1,6 +1,10 @@
 ###########################################################
 # main.tf
 ###########################################################
+
+#################################
+# VPC
+#################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 4.0"
@@ -15,7 +19,6 @@ module "vpc" {
 
   public_subnets  = var.public_subnets_cidr
   private_subnets = var.private_subnets_cidr
-
   enable_nat_gateway = true
 
   tags = {
@@ -23,24 +26,10 @@ module "vpc" {
   }
 }
 
-##############################
-# IAM / OIDC for EKS
-##############################
-resource "aws_iam_openid_connect_provider" "oidc" {
-  depends_on = [aws_eks_cluster.this]
-  # On attend la création du cluster pour récupérer l'issuer
-  url = replace(data.aws_eks_cluster.cluster.identity[0].oidc.issuer, "https://", "")
-  client_id_list = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960f8cbb5eaf###"] # => Valeur par défaut AWS EKS OIDC
-  # Cf doc: https://docs.aws.amazon.com/eks/latest/userguide/associate-iam-oidc-provider.html
-  # On doit la faire pointer sur le cluster
-  # On le fera "if" (associate_iam_oidc) => sinon, ressource compte pas
-  count = var.associate_iam_oidc ? 1 : 0
-}
-
-##############################
-# EKS IAM roles
-##############################
+#################################
+# EKS IAM / OIDC
+#################################
+# EKS cluster IAM + NodeGroup IAM
 data "aws_iam_policy_document" "eks_trust" {
   statement {
     effect  = "Allow"
@@ -51,12 +40,10 @@ data "aws_iam_policy_document" "eks_trust" {
     }
   }
 }
-
 resource "aws_iam_role" "eks_cluster_role" {
   name               = "${var.cluster_name}-cluster-role"
   assume_role_policy = data.aws_iam_policy_document.eks_trust.json
 }
-
 resource "aws_iam_role_policy_attachment" "eks_cluster_attach1" {
   role       = aws_iam_role.eks_cluster_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
@@ -93,9 +80,9 @@ resource "aws_iam_role_policy_attachment" "node_attach3" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
-##############################
-# EKS Cluster
-##############################
+#################################
+# EKS Cluster + NodeGroup
+#################################
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   version  = var.k8s_version
@@ -111,9 +98,6 @@ resource "aws_eks_cluster" "this" {
   ]
 }
 
-##############################
-# Node Group (dans subnets privés)
-##############################
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_role_arn   = aws_iam_role.eks_node_role.arn
@@ -135,36 +119,72 @@ resource "aws_eks_node_group" "this" {
   ]
 }
 
-##############################
-# Data sources: EKS endpoint + CA + token
-##############################
+#################################
+# Data sources EKS
+#################################
 data "aws_eks_cluster" "cluster" {
-  name = aws_eks_cluster.this.name
+  name       = aws_eks_cluster.this.name
   depends_on = [aws_eks_cluster.this]
 }
 data "aws_eks_cluster_auth" "cluster" {
-  name = aws_eks_cluster.this.name
+  name       = aws_eks_cluster.this.name
   depends_on = [aws_eks_cluster.this]
 }
 
-##############################
-# Reconfigurer le provider kubernetes (alias)
-##############################
+#################################
+# OIDC Provider pour IRSA (facultatif)
+#################################
+resource "aws_iam_openid_connect_provider" "oidc" {
+  count = var.associate_iam_oidc ? 1 : 0
+  depends_on = [aws_eks_cluster.this]
+
+  # Note l'accès: .identity[0].oidc[0].issuer
+  url = replace(
+    data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer,
+    "https://",
+    ""
+  )
+
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["9e99a48a9960f8cbb5eaf0f9..."] # par défaut
+}
+
+#################################
+# Configurer provider.kubernetes alias=eks
+# => On fait un "override" ici
+#################################
 provider "kubernetes" {
   alias = "eks"
+
   host                   = data.aws_eks_cluster.cluster.endpoint
   token                  = data.aws_eks_cluster_auth.cluster.token
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
 }
 
-##############################
+#################################
+# Configurer provider.helm alias=eks_helm
+# => On s'appuie sur data EKS
+#################################
+provider "helm" {
+  alias = "eks_helm"
+
+  kubernetes {
+    host                   = data.aws_eks_cluster.cluster.endpoint
+    token                  = data.aws_eks_cluster_auth.cluster.token
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  }
+}
+
+#################################
 # Helm : AWS LB Controller
-##############################
+#################################
 resource "helm_release" "aws_load_balancer_controller" {
+  provider = helm.eks_helm
+
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
-  version    = "1.5.1"  # ex.
+  version    = "1.5.1"
 
   namespace = "kube-system"
 
@@ -188,10 +208,6 @@ resource "helm_release" "aws_load_balancer_controller" {
     name  = "vpcId"
     value = module.vpc.vpc_id
   }
-
-  # On utilise le provider kubernetes (alias = "eks") qu'on vient de configurer
-  # => On se connecte à ce nouveau cluster
-  provider = kubernetes.eks
 
   depends_on = [
     aws_eks_node_group.this,

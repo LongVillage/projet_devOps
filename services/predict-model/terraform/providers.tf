@@ -1,6 +1,7 @@
 ###########################################################
 # providers.tf
 ###########################################################
+
 terraform {
   required_version = ">= 1.3.0"
 
@@ -18,33 +19,33 @@ terraform {
       version = "~> 2.5"
     }
   }
-  # (Optionnel) backend "s3" { ... } si tu veux stocker le state dans S3
+  # (Optionnel) backend "s3" { ... } si tu veux stocker tfstate dans S3
 }
 
+############################################
 # Provider AWS
-# On suppose que tu mets tes credentials via variable GitLab
-# (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY).
-# AWS_REGION sera passé en TF_VAR_aws_region ou dans terraform.tfvars
+############################################
 provider "aws" {
   region = var.aws_region
 }
 
-# Provider kubernetes
-# On n'a PAS besoin de "kube_host/kube_token/kube_ca" manuellement,
-# car on va utiliser data sources EKS pour auto-récupérer ces infos.
-# => Voir main.tf (on fera host/token/ca dynamiquement).
+############################################
+# Provider Kubernetes (alias "eks")
+# (OPTIONNEL si on veut manipuler des ressources K8s)
+############################################
 provider "kubernetes" {
-  host                   = var.k8s_host        # à renseigner si tu veux
-  token                  = var.k8s_token       # idem
-  cluster_ca_certificate = base64decode(var.k8s_ca)
-  # On le surchargera plus loin via alias (voir la technique data sources).
+  alias = "eks"
+
+  # On va plus loin dans main.tf pour lier host/token/CA
+  # via data.aws_eks_cluster, data.aws_eks_cluster_auth
 }
 
-# Provider helm
+############################################
+# Provider Helm (alias "eks_helm")
+############################################
 provider "helm" {
-  kubernetes {
-    host                   = var.k8s_host
-    token                  = var.k8s_token
-    cluster_ca_certificate = base64decode(var.k8s_ca)
-  }
+  alias = "eks_helm"
+
+  # On va également configurer dans main.tf
+  # kubernetes { host/token/CA }
 }
