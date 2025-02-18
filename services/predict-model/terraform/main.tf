@@ -139,10 +139,10 @@ resource "aws_iam_openid_connect_provider" "oidc" {
   depends_on = [aws_eks_cluster.this]
 
   # Note l'accès: .identity[0].oidc[0].issuer
-  url = replace(
-    data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer,
-    "https://",
-    ""
+  url = regexreplace(
+  data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer,
+  "^https://([^/]+)/.*",
+  "$1"
   )
 
   client_id_list  = ["sts.amazonaws.com"]
