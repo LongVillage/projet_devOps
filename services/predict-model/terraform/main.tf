@@ -146,7 +146,7 @@ resource "aws_iam_openid_connect_provider" "oidc" {
   )
 
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960f8cbb5eaf0f9..."] # par défaut
+  thumbprint_list = ["9e99a48a9960f8cbb5eaf0f9533d0f7836cb63e5"] # par défaut
 }
 
 #################################
