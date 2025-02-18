@@ -50,8 +50,13 @@ infra:
     - |
       echo "=== Terraform init/plan/apply ==="
       cd services/predict-model/terraform
+      echo "pwd"
+      pwd
+      echo "terraform init"
       terraform init
+      echo "terraform plan -out=tfplan"
       terraform plan -out=tfplan
+      echo "terraform apply -auto-approve tfplan"
       terraform apply -auto-approve tfplan
   artifacts:
     paths:
