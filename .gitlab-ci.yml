@@ -33,8 +33,7 @@ build-docker:
     - docker build -t django-crypto:latest .
     - docker tag django-crypto:latest $AWS_ECR_REGISTRY/django-crypto:latest
     - docker push $AWS_ECR_REGISTRY/django-crypto:latest
-    - cd ../..
-    - pwd
+    - cd ../../..
     - echo "=== Build & push Streamlit container ==="
     - cd services/predict-model/streamlit
     - docker build -t streamlit-crypto:latest .
