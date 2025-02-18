@@ -136,17 +136,15 @@ data "aws_eks_cluster_auth" "cluster" {
 #################################
 resource "aws_iam_openid_connect_provider" "oidc" {
   count = var.associate_iam_oidc ? 1 : 0
-  depends_on = [aws_eks_cluster.this]
 
-  # Note l'accès: .identity[0].oidc[0].issuer
-  url = regexreplace(
-  data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer,
-  "^https://([^/]+)/.*",
-  "$1"
+  # Extraction de l'hôte OIDC uniquement (sans HTTPS ni /id/…)
+  url = regex(
+    replace(data.aws_eks_cluster.cluster.identity[0].oidc.issuer, "https://", ""),
+    "([^/]+)"
   )
 
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960f8cbb5eaf0f9533d0f7836cb63e5"] # par défaut
+  thumbprint_list = ["9e99a48a9960f8cbb5eaf0f9533d0f7836cb63e5"] # 40 caractères
 }
 
 #################################
