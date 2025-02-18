@@ -139,7 +139,7 @@ resource "aws_iam_openid_connect_provider" "oidc" {
 
   # Extraction de l'hôte OIDC uniquement (sans HTTPS ni /id/…)
   url = regex(
-    replace(data.aws_eks_cluster.cluster.identity[0].oidc.issuer, "https://", ""),
+    replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", ""),
     "([^/]+)"
   )
 
