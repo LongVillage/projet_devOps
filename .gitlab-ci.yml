@@ -12,36 +12,36 @@ stages:
 #  AWS_ECR_REGISTRY (ex: 131674823919.dkr.ecr.eu-west-3.amazonaws.com)
 #  etc.
 
-build-docker:
-  stage: build
-  image: docker:20.10.16
-  services:
-    - docker:dind
-  variables:
-    DOCKER_HOST: "tcp://docker:2375/"
-  script:
-    - echo "test"
-    - echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
-    - echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
-    - apk update && apk add --no-cache python3 py3-pip
-    - pip install awscli
-    - echo "=== Build & push Django container ==="
-    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ECR_REGISTRY
+# build-docker:
+#   stage: build
+#   image: docker:20.10.16
+#   services:
+#     - docker:dind
+#   variables:
+#     DOCKER_HOST: "tcp://docker:2375/"
+#   script:
+#     - echo "test"
+#     - echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
+#     - echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+#     - apk update && apk add --no-cache python3 py3-pip
+#     - pip install awscli
+#     - echo "=== Build & push Django container ==="
+#     - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ECR_REGISTRY
 
-    # Build Django
-    - cd services/predict-model/Django
-    - docker build -t django-crypto:latest .
-    - docker tag django-crypto:latest $AWS_ECR_REGISTRY/django-crypto:latest
-    - docker push $AWS_ECR_REGISTRY/django-crypto:latest
-    - cd ../../..
-    - echo "=== Build & push Streamlit container ==="
-    - cd services/predict-model/streamlit
-    - docker build -t streamlit-crypto:latest .
-    - docker tag streamlit-crypto:latest $AWS_ECR_REGISTRY/streamlit-crypto:latest
-    - docker push $AWS_ECR_REGISTRY/streamlit-crypto:latest
-    - cd ../..
-  only:
-    - main
+#     # Build Django
+#     - cd services/predict-model/Django
+#     - docker build -t django-crypto:latest .
+#     - docker tag django-crypto:latest $AWS_ECR_REGISTRY/django-crypto:latest
+#     - docker push $AWS_ECR_REGISTRY/django-crypto:latest
+#     - cd ../../..
+#     - echo "=== Build & push Streamlit container ==="
+#     - cd services/predict-model/streamlit
+#     - docker build -t streamlit-crypto:latest .
+#     - docker tag streamlit-crypto:latest $AWS_ECR_REGISTRY/streamlit-crypto:latest
+#     - docker push $AWS_ECR_REGISTRY/streamlit-crypto:latest
+#     - cd ../..
+#   only:
+#     - main
 
 infra:
   stage: infra
