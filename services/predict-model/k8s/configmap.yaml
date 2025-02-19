@@ -9,5 +9,4 @@ data:
   DB_PORT: "5432"
 
   # URL de Streamlit (placeholder à mettre à jour après création de l'ALB)
-  STREAMLIT_URL: "http://k8s-default-cryptoin-34db866180-1481508178.eu-west-3.elb.amazonaws.com/streamlit"
-
+  STREAMLIT_URL: "http://${STREAMLIT_ALB_URL}/streamlit"
