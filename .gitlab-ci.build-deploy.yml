@@ -29,7 +29,9 @@ build-docker:
 
 deploy:
   stage: deploy
-  image: bitnami/kubectl:latest
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
   script:
     - echo "=== Update kubeconfig for EKS (myekscrypto) ==="
     - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
