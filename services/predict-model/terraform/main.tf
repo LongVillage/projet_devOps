@@ -134,18 +134,6 @@ data "aws_eks_cluster_auth" "cluster" {
 #################################
 # OIDC Provider pour IRSA (facultatif)
 #################################
-resource "aws_iam_openid_connect_provider" "oidc" {
-  count = var.associate_iam_oidc ? 1 : 0
-
-  # Extraction de l'hôte OIDC uniquement (sans HTTPS ni /id/…)
-  url = regex(
-    replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", ""),
-    "([^/]+)"
-  )
-
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960f8cbb5eaf0f9533d0f7836cb63e5"] # 40 caractères
-}
 
 #################################
 # Configurer provider.kubernetes alias=eks
