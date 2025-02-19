@@ -11,6 +11,7 @@ infra:
     - echo "=== Terraform init/plan/apply for Infra ==="
     - cd services/predict-model/terraform
     - terraform init
+    - echo test1234
     - terraform plan -out=tfplan
     - terraform apply -auto-approve tfplan
     - echo "=== Terraform Outputs ==="
