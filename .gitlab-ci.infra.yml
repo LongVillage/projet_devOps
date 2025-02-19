@@ -1,0 +1,24 @@
+#############################################
+# .gitlab-ci.infra.yml
+#############################################
+stages:
+  - infra
+
+infra:
+  stage: infra
+  image: hashicorp/terraform:1.3.9
+  script:
+    - echo "=== Terraform init/plan/apply for Infra ==="
+    - cd services/predict-model/terraform
+    - terraform init
+    - echo test1234
+    - terraform plan -out=tfplan
+    - terraform apply -auto-approve tfplan
+    - echo "=== Terraform Outputs ==="
+    - terraform output
+  artifacts:
+    paths:
+      - services/predict-model/terraform/terraform.tfstate
+    expire_in: 1 week
+  only:
+    - infra
