@@ -187,7 +187,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   }
   set {
     name  = "serviceAccount.create"
-    value = "false"
+    value = "true"
   }
   set {
     name  = "serviceAccount.name"
