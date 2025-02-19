@@ -1,3 +1,2 @@
 # Ignorer le dossier /aws/ dans predict-model
 services/predict-model/aws/
-.gitlab-ci.build-deploy.yml

@@ -1,0 +1,3 @@
+include:
+  - local: '.gitlab-ci.infra.yml'
+  - local: '.gitlab-ci.build-deploy.yml'
