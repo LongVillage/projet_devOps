@@ -1,3 +1,7 @@
+stages:
+  - build-deploy
+  - infra
+
 include:
   - local: '.gitlab-ci.build-deploy.yml'
   - local: '.gitlab-ci.infra.yml'
