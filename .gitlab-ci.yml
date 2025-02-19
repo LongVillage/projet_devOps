@@ -1,17 +1,16 @@
-stages:
-  - build-deploy
-  - infra
-
 include:
   - local: '.gitlab-ci.build-deploy.yml'
   - local: '.gitlab-ci.infra.yml'
-stages:
-  - build-deploy
-  - infra
 
-include:
-  - local: '.gitlab-ci.build-deploy.yml'
-  - local: '.gitlab-ci.infra.yml'
+infra_job:
+  stage: infra
+  script:
+    - echo "Lancement du job d'infrastructure"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "infra"'
+      when: always
+    - when: never
+
 build_deploy_job:
   stage: build-deploy
   script:
