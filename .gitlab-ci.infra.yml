@@ -12,7 +12,7 @@ infra:
     - cd services/predict-model/terraform
     - terraform init
     - terraform plan -out=tfplan
-    - terraform apply -auto-approve tfplan
+    - terraform apply tfplan || (echo "Apply failed, destroying..." && terraform destroy -auto-approve)
     - echo "=== Terraform Outputs ==="
     - terraform output
   artifacts:
