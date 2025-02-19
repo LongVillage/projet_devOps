@@ -30,7 +30,7 @@ build-docker:
 deploy:
   stage: deploy
   image:
-    name: lachlanevenson/k8s-awscli:latest
+    name: juliencourteville/aws-kube:latest
     entrypoint: [""]
   script:
     - apt-get update && apt-get install -y python3 python3-pip
