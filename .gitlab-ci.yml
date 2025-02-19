@@ -1,5 +1,6 @@
 stages:
-  - build-deploy
+  - build
+  - deploy
   - infra
 
 include:
@@ -16,10 +17,18 @@ infra_job:
     - when: never
 
 build_deploy_job:
-  stage: build-deploy
+  stage: build
   script:
     - echo "Lancement du job build & deploy"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: always
     - when: never
+deploy_job:
+  stage: deploy
+  script:
+    -echo "Lancement du job deploy"
+    rules:
+      - if: '$CI_COMMIT_BRANCH == "main"'
+        when: always
+      - when: never
