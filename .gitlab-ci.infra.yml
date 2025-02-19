@@ -4,8 +4,9 @@
 
 infra:
   stage: infra
-  image: hashicorp/terraform:1.3.9
-  entrypoint: [""]
+  image:
+    name: hashicorp/terraform:1.3.9
+    entrypoint: [""]
   script:
     - echo "=== Terraform init/plan/apply for Infra ==="
     - cd services/predict-model/terraform
