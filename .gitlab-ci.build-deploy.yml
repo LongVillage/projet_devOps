@@ -33,6 +33,8 @@ deploy:
     name: bitnami/kubectl:latest
     entrypoint: [""]
   script:
+    - apk update && apk add --no-cache python3 py3-pip
+    - pip install awscli
     - echo "=== Update kubeconfig for EKS (myekscrypto) ==="
     - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
     - echo "=== Deploy Kubernetes manifests ==="
