@@ -12,7 +12,7 @@ build-docker:
     - apk update && apk add --no-cache python3 py3-pip
     - pip install awscli
     - echo "=== Build & push Django container ==="
-    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username $AWS_ACCESS_KEY_ID --password-stdin $AWS_ECR_REGISTRY
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ECR_REGISTRY
     - cd services/predict-model/Django
     - docker build -t django-crypto:latest .
     - docker tag django-crypto:latest $AWS_ECR_REGISTRY/django-crypto:latest
