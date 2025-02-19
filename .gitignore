@@ -1,6 +1,6 @@
 # Ignorer le dossier /aws/ dans predict-model
 services/predict-model/aws/
-
+.gitlab-ci.infra.yml
 # (Optionnel) ignorer d'autres trucs
 # .idea/
 # *.pyc

@@ -1,0 +1,46 @@
+#############################################
+# .gitlab-ci.build-deploy.yml
+#############################################
+stages:
+  - build
+  - deploy
+
+build-docker:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: "tcp://docker:2375/"
+  script:
+    - echo "=== Build & push Django container ==="
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ECR_REGISTRY
+    - cd services/predict-model/Django
+    - docker build -t django-crypto:latest .
+    - docker tag django-crypto:latest $AWS_ECR_REGISTRY/django-crypto:latest
+    - docker push $AWS_ECR_REGISTRY/django-crypto:latest
+    - cd ../..
+    - echo "=== Build & push Streamlit container ==="
+    - cd services/predict-model/streamlit
+    - docker build -t streamlit-crypto:latest .
+    - docker tag streamlit-crypto:latest $AWS_ECR_REGISTRY/streamlit-crypto:latest
+    - docker push $AWS_ECR_REGISTRY/streamlit-crypto:latest
+    - cd ../..
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "=== Update kubeconfig for EKS (myekscrypto) ==="
+    - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
+    - echo "=== Deploy Kubernetes manifests ==="
+    - kubectl apply -f services/predict-model/k8s/
+    - echo "=== Restart Django deployment ==="
+    - kubectl rollout restart deployment django-deployment
+    - kubectl get pods
+  dependencies:
+    - build-docker
+  only:
+    - main
