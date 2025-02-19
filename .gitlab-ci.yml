@@ -27,8 +27,8 @@ build_deploy_job:
 deploy_job:
   stage: deploy
   script:
-    -echo "Lancement du job deploy"
-    rules:
-      - if: '$CI_COMMIT_BRANCH == "main"'
-        when: always
-      - when: never
+    - echo "Lancement du job deploy"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: never
