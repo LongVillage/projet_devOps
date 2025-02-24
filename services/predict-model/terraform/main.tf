@@ -28,7 +28,6 @@ module "vpc" {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                       = "1"
   }
-
 }
 
 #################################
@@ -86,6 +85,70 @@ resource "aws_iam_role_policy_attachment" "node_attach3" {
 }
 
 #################################
+# OPTION 2 : Ajout d'une politique IAM pour le LB Controller sur le rôle des nodes
+#################################
+resource "aws_iam_policy" "aws_lb_controller_policy" {
+  name        = "${var.cluster_name}-aws-lb-controller-policy-for-nodes"
+  description = "Policy for AWS Load Balancer Controller added to the node role (temporary workaround)"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+         "acm:DescribeCertificate",
+         "acm:ListCertificates",
+         "acm:GetCertificate",
+         "ec2:AuthorizeSecurityGroupIngress",
+         "ec2:RevokeSecurityGroupIngress",
+         "ec2:Describe*",
+         "elasticloadbalancing:AddListenerCertificates",
+         "elasticloadbalancing:RemoveListenerCertificates",
+         "elasticloadbalancing:Describe*",
+         "elasticloadbalancing:ModifyListener",
+         "elasticloadbalancing:ModifyLoadBalancerAttributes",
+         "elasticloadbalancing:DescribeListenerCertificates",
+         "elasticloadbalancing:CreateListener",
+         "elasticloadbalancing:DeleteListener",
+         "elasticloadbalancing:CreateLoadBalancer",
+         "elasticloadbalancing:DeleteLoadBalancer",
+         "elasticloadbalancing:CreateRule",
+         "elasticloadbalancing:DeleteRule",
+         "elasticloadbalancing:CreateTargetGroup",
+         "elasticloadbalancing:DeleteTargetGroup",
+         "elasticloadbalancing:ModifyTargetGroup",
+         "elasticloadbalancing:DescribeTargetGroups",
+         "elasticloadbalancing:DescribeTargetHealth",
+         "elasticloadbalancing:RegisterTargets",
+         "elasticloadbalancing:DeregisterTargets",
+         "elasticloadbalancing:ModifyTargetGroupAttributes",
+         "waf-regional:GetWebACLForResource",
+         "waf-regional:AssociateWebACL",
+         "waf-regional:DisassociateWebACL",
+         "wafv2:GetWebACL",
+         "wafv2:GetWebACLForResource",
+         "wafv2:AssociateWebACL",
+         "wafv2:DisassociateWebACL",
+         "shield:DescribeProtection",
+         "shield:GetSubscriptionState",
+         "shield:DeleteProtection",
+         "shield:CreateProtection",
+         "shield:DescribeSubscription"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "node_attach_lb_controller" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = aws_iam_policy.aws_lb_controller_policy.arn
+}
+
+#################################
 # EKS Cluster + NodeGroup
 #################################
 resource "aws_eks_cluster" "this" {
@@ -120,7 +183,8 @@ resource "aws_eks_node_group" "this" {
     aws_eks_cluster.this,
     aws_iam_role_policy_attachment.node_attach1,
     aws_iam_role_policy_attachment.node_attach2,
-    aws_iam_role_policy_attachment.node_attach3
+    aws_iam_role_policy_attachment.node_attach3,
+    aws_iam_role_policy_attachment.node_attach_lb_controller
   ]
 }
 
@@ -170,14 +234,14 @@ provider "helm" {
 # Helm : AWS LB Controller
 #################################
 resource "helm_release" "aws_load_balancer_controller" {
-  provider = helm.eks_helm
+  provider   = helm.eks_helm
 
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   version    = "1.5.1"
-  timeout = 600
-  wait = true
+  timeout    = 600
+  wait       = true
 
   namespace = "kube-system"
 
