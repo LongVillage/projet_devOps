@@ -34,7 +34,7 @@ deploy:
     entrypoint: [""]
   script:
     - echo "=== Update kubeconfig for EKS (MyEKS) ==="
-    - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name MyEKS
+    - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
     - echo "=== Deploy Kubernetes manifests ==="
     - kubectl apply -f services/predict-model/k8s/
     - echo "=== Restart Django deployment ==="
