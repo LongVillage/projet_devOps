@@ -2,55 +2,56 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
+import requests
+
+# Ton endpoint public
+ENDPOINT_URL = "https://01ce0xnund.execute-api.eu-west-3.amazonaws.com/dev/prediction"
 
 
-st.header("Graphic Crypto:")
-
-col1, col2 = st.columns(2)
-
-col1.metric("total wallet", "1000")
-col2.metric("tomorrow's forecast", "1200", "4%")
-
-# Generate realistic data for the past 30 days with closer variations
-dates = pd.date_range(end=pd.Timestamp.today(), periods=30)
-data = {
-    "date": np.tile(dates, reps= 1),
-    "Crypto monnaie": np.repeat("Bitcoins", 30),
-    "value": np.concatenate([
-        np.random.randn(30) * 1000 + 35000,  # Bitcoins prices
-    ])
-}
-
-chart_data = pd.DataFrame(data)
-
-st.line_chart(chart_data, x="date", y="value", color="Crypto monnaie")
+@st.cache_data
+def fetch_prediction():
+    try:
+        response = requests.post(ENDPOINT_URL)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erreur lors de l'appel à l'endpoint : {e}")
+        return None
 
 
-# Generate realistic data for the past 30 days
-dates = pd.date_range(end=pd.Timestamp.today(), periods=30)
-values = np.random.randn(30) * 1000 + 35000  # Simulate Bitcoin prices
-percent_changes = np.diff(values) / values[:-1] * 100
+# Appel API au chargement de la page
+predicted_value = fetch_prediction()
 
-# Create DataFrame for the bar chart
-data = {
-    "date": dates[1:],
-    "percent_change": np.round(percent_changes, 2)  # Round to 2 decimal places
-}
+if predicted_value is not None:
+    col1, col2 = st.columns(2)
+    total_wallet = 1000
+    total_wallet_tomorrow = round(total_wallet + ((total_wallet * predicted_value) / 100), 2)
 
-chart_data = pd.DataFrame(data)
+    col1.metric("Total Wallet", total_wallet)
+    col2.metric("Prévision pour demain", f"{total_wallet_tomorrow}", f"{predicted_value}%")
 
-color_scale = alt.condition(
-    alt.datum.percent_change > 0,
-    alt.value('#3A9D23'),  # Green for positive changes
-    alt.value('#FF0000')   # Red for negative changes
-)
+    # Génération des dates pour la semaine du 3 mars 2025
+    dates = pd.date_range("2025-03-03", periods=7)
 
-bar_chart = alt.Chart(chart_data).mark_bar(size=30).encode(  # Increase bar size
-    x=alt.X('date:T', axis=alt.Axis(format='%d %b', title='Date')),  # Display all days
-    y=alt.Y('percent_change:Q', title='Percentage Change'),
-    color=color_scale
-).properties(
-    width=800  # Adjust width if needed
-)
+    # Estimation stable des valeurs entre 30 000 et 40 000 (exemple : tendance haussière)
+    bitcoin_prices = [32000, 32500, 33000, 34000, 35000, 35500, 36000]
 
-st.altair_chart(bar_chart, use_container_width=True)
+    # Création du DataFrame
+    data = pd.DataFrame({
+        "date": dates,
+        "value": bitcoin_prices
+    })
+
+    # Création du graphique avec Altair en fixant les limites de l'axe Y
+    chart = alt.Chart(data).mark_line().encode(
+        x="date:T",
+        y=alt.Y("value:Q", scale=alt.Scale(domain=[30000, 40000]))
+    ).properties(
+        title="Estimation du Bitcoin (Semaine du 3 mars 2025)"
+    )
+
+    # Affichage du graphique
+    st.altair_chart(chart, use_container_width=True)
+else:
+    st.error("Format de réponse inconnu ou clé 'prediction' manquante")
+
