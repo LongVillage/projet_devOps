@@ -35,6 +35,7 @@ deploy:
   script:
     - echo "=== Update kubeconfig for EKS (MyEKS) ==="
     - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name myekscrypto
+    - sed -i "s|\${STREAMLIT_ALB_URL}|$STREAMLIT_ALB_URL|g" services/predict-model/k8s/configmap.yaml
     - echo "=== Deploy Kubernetes manifests ==="
     - kubectl apply -f services/predict-model/k8s/
     - echo "=== Restart Django deployment ==="
